@@ -27,8 +27,8 @@ def log_execution(func):
         count = call_counts[(class_name, func.__name__)]
         
         # Store the information in a meaningful way to a text file
-        with open('C:/Users/pavan/OneDrive/Desktop/function_calls.txt', 'a') as f:
-            f.write(f"Function '{func.__name__}' from class '{class_name}' called {count} times\n")
+        """with open('C:/Users/pavan/OneDrive/Desktop/function_calls.txt', 'a') as f:
+            f.write(f"Function '{func.__name__}' from class '{class_name}' called {count} times\n")"""
 
         result = func(*args, **kwargs)
         return result
