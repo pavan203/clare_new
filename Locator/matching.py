@@ -218,16 +218,22 @@ class CommMatching:
         for batch_num in range(batch_len):
             start, end = batch_num * batch_size, min((batch_num+1)*batch_size, n_node)
             print(start,end,'start end')
-            gr=[]
+            graph = [generate_ego_net(self.graph, g, k=self.args.n_layers, max_size=self.args.comm_max_size) for g in
+                      range(start,end)]
+
+
+            """gr=[]
             for i in range(start,end-1000,1000):
 
                 graph = [generate_ego_net(self.graph, g, k=self.args.n_layers, max_size=self.args.comm_max_size) for g in
                       range(i, i+1000)]
-                gr.append(graph)
+                gr.append(graph)"""
+            
+
             #graph2 = [generate_ego_net(self.graph, g, k=self.args.n_layers, max_size=self.args.comm_max_size) for g in range(end//2, end)]
             print('\ngenerate_ego_net done')
             #print('len of graphs',len(graph1),len(graph2))
-            tmp_emb = generate_embeddings(gr, self.model, device=self.args.device)
+            tmp_emb = generate_embedding(graph, self.model, device=self.args.device)
             # all_emb = tmp_emb if batch_num == 0 else np.vstack((all_emb, tmp_emb))
             all_emb[start:end, :] = tmp_emb
             print(
