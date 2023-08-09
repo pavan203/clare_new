@@ -57,7 +57,7 @@ class CommMatching:
         #print('after\n',train_comms,'\n',val_comms)
         self.model = self.load_model()
         self.opt = optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=args.lr)
-        self.writer = SummaryWriter(args.writer_dir)
+        #self.writer = SummaryWriter(args.writer_dir)
     @log_execution
     def load_model(self, load=False):
         """Load CommunityOrderEmbedding"""
