@@ -98,8 +98,8 @@ def generate_ego_net(graph, start_node, k=1, max_size=15, choice="subgraph"):
             if len(visited) >= max_size:
                 break
         iteration += 1
-        with open('C:/Users/pavan/OneDrive/Desktop/sodhi.txt', 'a') as f:
-            f.write('\niteration ' + str(iteration) + ' \nstart node ' + str(q)+'len of q'+str(len(q)) + '\n' + 'visited' + str(visited))
+        """with open('C:/Users/pavan/OneDrive/Desktop/sodhi.txt', 'a') as f:
+            f.write('\niteration ' + str(iteration) + ' \nstart node ' + str(q)+'len of q'+str(len(q)) + '\n' + 'visited' + str(visited))"""
     visited = sorted(visited)
     #print('\n\nvisited',visited)
     #print('\n',graph.subgraph(visited).nodes())
