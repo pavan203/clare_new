@@ -174,11 +174,11 @@ class CommMatching:
                 self.opt.step()
 
                 if (batch + 1) % 5 == 0:
-                    self.writer.add_scalar(f"CommM Loss/Train", loss.item(), batch + epoch * batch_size)
+                    #self.writer.add_scalar(f"CommM Loss/Train", loss.item(), batch + epoch * batch_size)
                     print(f"Epoch {epoch + 1}, Batch{batch + 1}, Loss {loss.item():.4f}")
                 if (batch + 1) % 10 == 0:
                     self.valid_model(valid_set, batch + epoch * batch_size)
-        torch.save(self.model.state_dict(), self.args.writer_dir + "/commm.pt")
+        #torch.save(self.model.state_dict(), self.args.writer_dir + "/commm.pt")
     @log_execution
     def valid_model(self, valid_set, batch_num):
         """Test model on `valid_set`"""
@@ -200,7 +200,7 @@ class CommMatching:
                 loss = self.model.criterion(pred, labels)
                 total_loss += loss.item()
         total_loss /= len(valid_set)
-        self.writer.add_scalar(f"CommM Loss/Val", loss.item(), batch_num)
+        #self.writer.add_scalar(f"CommM Loss/Val", loss.item(), batch_num)
         print("[Eval-Test] Validation Loss{:.4f}".format(total_loss))
 
         # TODO: Save model
@@ -232,8 +232,8 @@ class CommMatching:
             all_emb[start:end, :] = tmp_emb
             print(
                 "No.{}-{} candidate com embedding finish".format(start, end))
-        np.save(self.args.writer_dir + "/emb", all_emb)
-        np.save(self.args.writer_dir + "/query", query_emb)
+        #np.save(self.args.writer_dir + "/emb", all_emb)
+        #np.save(self.args.writer_dir + "/query", query_emb)
         return all_emb, query_emb
     @log_execution
     def make_prediction(self):
