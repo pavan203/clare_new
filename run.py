@@ -171,8 +171,8 @@ if __name__ == "__main__":
 
     seed_all(args.seed)
 
-    if not os.path.exists(f"{args.dataset}"):
-        os.mkdir(f"{args.dataset}")
+    """if not os.path.exists(f"{args.dataset}"):
+        os.mkdir(f"{args.dataset}")"""
     args.writer_dir = f"{args.dataset}/{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     
     
