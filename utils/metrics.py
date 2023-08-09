@@ -1,8 +1,41 @@
 from math import log
 from typing import List, Union, Set
 import numpy as np
+import logging
+import functools
+from collections import defaultdict
+import inspect
+logging.basicConfig(level=logging.DEBUG)
 
 
+
+def log_execution(func):
+    call_counts = defaultdict(int)
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Get the class name
+        class_name = ""
+        if inspect.stack()[1][3] == "<module>":
+            # Function is called from the module level
+            class_name = "Module"
+        else:
+            # Function is called from a class
+            class_name = args[0].__class__.__name__
+
+        call_counts[(class_name, func.__name__)] += 1
+        count = call_counts[(class_name, func.__name__)]
+        
+        # Store the information in a meaningful way to a text file
+        with open('C:/Users/pavan/OneDrive/Desktop/function_calls.txt', 'a') as f:
+            f.write(f"Function '{func.__name__}' from class '{class_name}' called {count} times\n")
+
+        result = func(*args, **kwargs)
+        return result
+
+    return wrapper
+
+@log_execution
 def compare_comm(pred_comm: Union[List, Set],
                  true_comm: Union[List, Set]) -> (float, float, float, float):
     """
@@ -16,7 +49,7 @@ def compare_comm(pred_comm: Union[List, Set],
     j = len(intersect) / (len(pred_comm) + len(true_comm) - len(intersect))
     return p, r, f, j
 
-
+@log_execution
 def eval_scores(pred_comms, true_comms, tmp_print=False):
     # 4 columns for precision, recall, f1, jaccard
     pred_scores = np.zeros((len(pred_comms), 4))
@@ -51,17 +84,17 @@ def eval_scores(pred_comms, true_comms, tmp_print=False):
               f"Detect percent: {percent:.4f}")
     return round(mean_score_all[2], 4), round(mean_score_all[3], 4), round(nmi_score, 4)
 
-
+@log_execution
 def get_intersection(a, b, choice=None):
     return len(list(set(a) & set(b))) if not choice else list(set(a) & set(b))
 
-
+@log_execution
 def get_difference(a, b):
     intersection = get_intersection(a, b, choice="List")
     nodes = {x for x in a if x not in intersection}
     return len(list(nodes))
 
-
+@log_execution
 def get_nmi_score(pred, gt):
     def get_overlapping(pred_comms, ground_truth):
         """All nodes number"""

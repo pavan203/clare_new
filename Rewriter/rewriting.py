@@ -6,9 +6,42 @@ from .data_obj import DataProcessor, Community
 from .policy_agent import RewritingAgent
 from .symbol import EXPAND, EXCLUDE, VIRTUAL_EXCLUDE_NODE
 from utils import generate_outer_boundary, eval_scores
+import logging
+import functools
+from collections import defaultdict
+import inspect
+logging.basicConfig(level=logging.DEBUG)
 
+
+
+def log_execution(func):
+    call_counts = defaultdict(int)
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Get the class name
+        class_name = ""
+        if inspect.stack()[1][3] == "<module>":
+            # Function is called from the module level
+            class_name = "Module"
+        else:
+            # Function is called from a class
+            class_name = args[0].__class__.__name__
+
+        call_counts[(class_name, func.__name__)] += 1
+        count = call_counts[(class_name, func.__name__)]
+        
+        # Store the information in a meaningful way to a text file
+        with open('C:/Users/pavan/OneDrive/Desktop/function_calls.txt', 'a') as f:
+            f.write(f"Function '{func.__name__}' from class '{class_name}' called {count} times\n")
+
+        result = func(*args, **kwargs)
+        return result
+
+    return wrapper
 
 class CommRewriting:
+    @log_execution
     def __init__(self, args, graph, feat_mat, train_comms, valid_comms, pred_comms, cost_choice):
         self.args = args
         self.data_processor = DataProcessor(args, args.dataset, feat_mat, graph, train_comms, valid_comms)
@@ -20,6 +53,7 @@ class CommRewriting:
         self.writer = SummaryWriter(args.writer_dir)
         self.max_step = args.max_step
         self.best_epoch = None
+    @log_execution
 
     def load_net(self, filename=None):
         file = self.args.writer_dir + "/commr.pt" if not filename else filename
@@ -28,6 +62,7 @@ class CommRewriting:
         self.agent.expand_net.load_state_dict(data[EXPAND])
         self.agent.exclude_net.load_state_dict(data[EXCLUDE])
 
+    @log_execution
     def save_net(self, file_name=None):
         data = {
             EXPAND: self.agent.expand_net.state_dict(),
@@ -35,7 +70,7 @@ class CommRewriting:
         }
         f_name = self.args.writer_dir + "/commr.pt" if not file_name else file_name
         torch.save(data, f_name)
-
+    @log_execution
     def train(self):
         self.agent.exclude_net.train()
         self.agent.expand_net.train()
@@ -150,7 +185,7 @@ class CommRewriting:
                         self.save_net(self.args.writer_dir + f"/commr_eval_best.pt")
         # TODO: Save model
         self.save_net()
-
+    @log_execution
     def get_rewrite(self, filename=None):
         if filename:
             self.load_net(filename)
@@ -162,7 +197,7 @@ class CommRewriting:
         lengths = np.array([len(pred_com) for pred_com in rewrite_comms])
         print(f"[Rewrite] Pred size {len(rewrite_comms)}, Avg Length {np.mean(lengths):.04f}")
         return rewrite_comms
-
+    @log_execution
     def rewrite_community(self, valid=False, val_pred=None):
         new_preds = []
         pred_comms = self.pred_comms if not valid else val_pred

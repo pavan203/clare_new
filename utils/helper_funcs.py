@@ -4,13 +4,40 @@ import scipy.stats as stats
 import torch
 from deepsnap.graph import Graph as DSGraph
 from deepsnap.batch import Batch
+import logging
+import functools
+from collections import defaultdict
+import inspect
+logging.basicConfig(level=logging.DEBUG)
 
+
+def log_execution(func):
+    call_counts = defaultdict(int)
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Get the class name
+        class_name = ""
+        if inspect.stack()[1][3] == "<module>":
+            # Function is called from the module level
+            class_name = "Module"
+        else:
+            # Function is called from a class
+            if args!=None:
+                class_name = args[0].__class__.__name__
+
+        call_counts[(class_name, func.__name__)] += 1
+        count = call_counts[(class_name, func.__name__)]
+        logging.debug("Function {} from class {} called {} times".format(func.__name__, class_name, count))
+        result = func(*args, **kwargs)
+        return result
+
+    return wrapper
 
 def get_device(device=None):
     if device:
         return torch.device(device)
     return torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
 
 def sample_neigh(graphs, size):
     """Sampling function during training"""
@@ -41,14 +68,16 @@ def sample_neigh(graphs, size):
             frontier = [x for x in frontier if x not in visited]
         return graph, neigh
 
-
 def generate_ego_net(graph, start_node, k=1, max_size=15, choice="subgraph"):
     """Generate **k** ego-net"""
     q = [start_node]
     visited = [start_node]
 
     iteration = 0
+    
     while True:
+        
+        
         if iteration >= k:
             break
         length = len(q)
@@ -69,8 +98,11 @@ def generate_ego_net(graph, start_node, k=1, max_size=15, choice="subgraph"):
             if len(visited) >= max_size:
                 break
         iteration += 1
+        with open('C:/Users/pavan/OneDrive/Desktop/sodhi.txt', 'a') as f:
+            f.write('\niteration ' + str(iteration) + ' \nstart node ' + str(q)+'len of q'+str(len(q)) + '\n' + 'visited' + str(visited))
     visited = sorted(visited)
-    # print(visited)
+    #print('\n\nvisited',visited)
+    #print('\n',graph.subgraph(visited).nodes())
     return visited if choice == "neighbors" else graph.subgraph(visited)
 
 
@@ -93,7 +125,26 @@ def batch2graphs(graphs, device=None):
 
 def generate_embedding(batch, model, device=None):
     batches = batch2graphs(batch, device=device)
+    print('/n batches done')
     pred = model.encoder(batches)
+    pred = pred.cpu().detach().numpy()
+    return pred
+
+def generate_embeddings(gr, model, device=None):
+    c=0
+    for i in gr:
+        batches = batch2graphs(i, device=device)
+        print('\nbatches run complete')
+        #batches2=batch2graphs(batch2,device=device)
+        if c==0:
+            pred1 = model.encoder(batches)
+            print('\n pred1 complete')
+            c+=1
+        pred=model.encoder(batches)
+        pred=torch.cat(pred1,pred)
+        pred1=pred
+
+    print('/n batches done')
     pred = pred.cpu().detach().numpy()
     return pred
 

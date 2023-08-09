@@ -115,7 +115,7 @@ def create_hybrid_network(dataset1, dataset2, num_random_edges=5000):
 
 def generate_dataset():
     # Single
-    for name in ["amazon", "dblp", "lj"]:
+    for name in ["amazon", "dblp", "lj",'new']:
         comms = load_community(name)
         edges, comms = load_subgraph(comms, name)
 

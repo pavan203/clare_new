@@ -4,9 +4,42 @@ import numpy as np
 import torch
 from .symbol import VIRTUAL_EXCLUDE_NODE, VIRTUAL_EXPAND_NODE
 from utils import generate_ego_net, generate_outer_boundary
+import logging
+import functools
+from collections import defaultdict
+import inspect
+logging.basicConfig(level=logging.DEBUG)
 
+
+
+def log_execution(func):
+    call_counts = defaultdict(int)
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Get the class name
+        class_name = ""
+        if inspect.stack()[1][3] == "<module>":
+            # Function is called from the module level
+            class_name = "Module"
+        else:
+            # Function is called from a class
+            class_name = args[0].__class__.__name__
+
+        call_counts[(class_name, func.__name__)] += 1
+        count = call_counts[(class_name, func.__name__)]
+        
+        # Store the information in a meaningful way to a text file
+        with open('C:/Users/pavan/OneDrive/Desktop/function_calls.txt', 'a') as f:
+            f.write(f"Function '{func.__name__}' from class '{class_name}' called {count} times\n")
+
+        result = func(*args, **kwargs)
+        return result
+
+    return wrapper
 
 class Community:
+    @log_execution
     def __init__(self, feat_mat, pred_com, true_com, nodes, subgraph, mapping, expand=True):
         """
         :param feat_mat: node feature matrix
@@ -40,14 +73,14 @@ class Community:
         # Augment node embedding with POSITION-FLAG
         position_flag = self.generate_position_flag()
         self.feat_mat = np.hstack((position_flag, self.feat_mat))
-
+    @log_execution
     def generate_position_flag(self):
         result = np.zeros((self.feat_mat.shape[0], 1))
         for idx, node in self.mapping.items():
             if node in self.pred_com:
                 result[idx, 0] = 1
         return result
-
+    @log_execution
     def compute_cost(self, choice="f1"):
         """Compute the cost brought by current **Action**"""
         intersection = set(self.true_com) & set(self.pred_com)
@@ -68,7 +101,7 @@ class Community:
             return precision * upper_base
         else:
             raise NotImplementedError
-
+    @log_execution
     def step(self, emb_updater):
         """Move into the next **State** with `emb_updater`"""
         edges = list(self.graph.subgraph(self.pred_com).edges())
@@ -86,14 +119,14 @@ class Community:
         position_flag = self.generate_position_flag()
         new_feat_mat = np.hstack((position_flag, new_x.detach().numpy()))
         return new_feat_mat
-
+    @log_execution
     def apply_exclude(self, node, cost_choice):
         """Apply Exclude action and return corresponding Reward"""
         pre_cost = self.compute_cost(choice=cost_choice)
         if node in self.pred_com:
             self.pred_com.remove(node)
         return self.compute_cost(choice=cost_choice) - pre_cost
-
+    @log_execution
     def apply_expand(self, node, cost_choice):
         """Apply Expand action and return corresponding Reward"""
         pre_cost = self.compute_cost(choice=cost_choice)
@@ -103,13 +136,14 @@ class Community:
 
 
 class DataProcessor(object):
+    @log_execution
     def __init__(self, args, dataset, feat_mat, graph, train_comms, valid_comms):
         self.args = args
         self.dataset = dataset
         self.graph = graph
         self.feat_mat = feat_mat
         self.train_comms, self.valid_comms = train_comms, valid_comms
-
+    @log_execution
     def generate_data(self, batch_size=64, valid=False):
         comms = self.train_comms if not valid or len(self.valid_comms) == 0 else self.valid_comms
 
